@@ -1,2 +1,2 @@
 # LitHub
-Try it out here! https://literaturehub.azurewebsites.net/
+Try it out here: https://literaturehub.azurewebsites.net/
