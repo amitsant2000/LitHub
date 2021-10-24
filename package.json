@@ -2,7 +2,7 @@
     "name": "calhacks-gap",
     "version": "1.0.0",
     "description": "",
-    "main": "app.js",
+    "main": "index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "start": "node index.js"
@@ -18,8 +18,10 @@
     },
     "homepage": "https://github.com/amitsant2000/personal-website#readme",
     "dependencies": {
+        "@eluvio/elv-client-js": "^3.1.72",
         "body-parser": "^1.19.0",
         "cookie-parser": "^1.4.5",
+        "crypto": "^1.0.1",
         "express": "^4.17.1",
         "fs": "0.0.1-security",
         "hbs": "^4.1.2",
@@ -27,7 +29,9 @@
         "http-errors": "^1.8.0",
         "morgan": "^1.10.0",
         "nodemailer": "^6.6.0",
-        "path": "^0.12.7"
+        "path": "^0.12.7",
+        "sequelize": "^6.7.0",
+        "sequelize-cockroachdb": "^6.0.3"
     },
     "engines": {
         "node": "11.3"
