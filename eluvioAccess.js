@@ -87,7 +87,26 @@ async function accessBook(objectId, key) {
     objectId: objectId,
   })
 }
-//async function downloadBook()
+async function downloadBook(key, objectId, filePath) {
+  const client = await ElvClient.FromConfigurationUrl({
+    configUrl: "https://demov3.net955210.contentfabric.io/config"
+  });
+  const wallet = client.GenerateWallet();
+  const signer = wallet.AddAccount({
+    privateKey: key
+  });
+  client.SetSigner({signer});
+  return await client.DownloadFile({
+    libraryId: libraryId,
+    objectId: objectId,
+    filePath: filePath
+  })
+}
 //uploadContent("Book", "test.txt", 10000, "Book2", myPrivateKey, 0.05)
 //accessBook("iq__c6TP7cVAqRKSKu4S6PGUqYN36JE", secondKey); 
-setVisible("iq__c6TP7cVAqRKSKu4S6PGUqYN36JE", myPrivateKey);
+//setVisible("iq__c6TP7cVAqRKSKu4S6PGUqYN36JE", myPrivateKey);
+/*downloadBook(myPrivateKey,"iq__c6TP7cVAqRKSKu4S6PGUqYN36JE", "/test.txt").then(
+  (res) => {
+    console.log(res)
+  }
+)*/
