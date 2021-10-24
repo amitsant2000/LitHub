@@ -1,2 +1,2 @@
 # LitHub
-If you have time to clean, you're not reading enough!
+Try it out here! https://literaturehub.azurewebsites.net/
