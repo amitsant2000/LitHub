@@ -16,65 +16,65 @@ const upload = multer({ dest: 'data/uploads/' })
 
 const libraryId = process.env.LIB_ID;
 async function uploadContent(LitType, LitPath, LitName, LitSize, Title, key, Price) {
-    const client = await ElvClient.FromConfigurationUrl({
-        configUrl: process.env.CONFIG_URL
-    });
-    const wallet = client.GenerateWallet();
+  const client = await ElvClient.FromConfigurationUrl({
+      configUrl: process.env.CONFIG_URL
+  });
+  const wallet = client.GenerateWallet();
   const signer = wallet.AddAccount({
     privateKey: key
   });
 
-client.SetSigner({signer});
-    const createResponse = await client.CreateContentObject({libraryId});
-    const objectId = createResponse.id;
-    const writeToken = createResponse.write_token;
+  client.SetSigner({signer});
+  const createResponse = await client.CreateContentObject({libraryId});
+  const objectId = createResponse.id;
+  const writeToken = createResponse.write_token;
 
-    await client.ReplaceMetadata({
+  await client.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadata: {
+      public: {
+        name: Title,
+        description: Title
+      },
+      tags: [
+        LitType
+      ]
+    }
+  });
+
+  await client.UploadFiles({
       libraryId,
       objectId,
       writeToken,
-      metadata: {
-        public: {
-          name: Title,
-          description: Title
-        },
-        tags: [
-          LitType
-        ]
-      }
-    });
-
-    await client.UploadFiles({
-        libraryId,
-        objectId,
-        writeToken,
-        fileInfo: [
-          {
-              path: "book.txt",
-              type: "file",
-              mime_type: "text/plain",
-              size: LitSize,
-              data: fs.openSync(path.join(LitPath,LitName)  ,"r")
-          }
-        ]
-    });
+      fileInfo: [
+        {
+            path: "book.txt",
+            type: "file",
+            mime_type: "text/plain",
+            size: LitSize,
+            data: fs.openSync(path.join(LitPath,LitName)  ,"r")
+        }
+      ]
+  });
 
 
-    const finalizeResponse = await client.FinalizeContentObject({
-      libraryId,
-      objectId,
-      writeToken
-    });
+  const finalizeResponse = await client.FinalizeContentObject({
+    libraryId,
+    objectId,
+    writeToken
+  });
 
-    await client.SetAccessCharge({
-      objectId: objectId, 
-      accessCharge: Price});
+  await client.SetAccessCharge({
+    objectId: objectId, 
+    accessCharge: Price});
 
-    await client.SetPermission({objectId: objectId, permission: "viewable"});
-    //var newAccessgroup = client.CreateAccessGroup()
+  await client.SetPermission({objectId: objectId, permission: "viewable"});
+  //var newAccessgroup = client.CreateAccessGroup()
 
-    const versionHash = finalizeResponse.hash;
-    return objectId
+  const versionHash = finalizeResponse.hash;
+  return objectId
 }
 async function accessBook(objectId, key) {
   const client = await ElvClient.FromConfigurationUrl({
@@ -396,15 +396,6 @@ app.post('/upload-book', upload.single('filename'), (req, res) => {
 app.post('/buy-book', requireAuth, (req, res) => {
   if (!req.user.author) {
     const { key } = req.body;
-    downloadBook(req.body.key, req.query.book).then((res)=> {
-      //brandonis
-      var dec = new TextDecoder('utf-8')
-      var content = dec.decode(res)
-      res.render("read", {
-        "content": content
-      });
-    })
-    return
     buyBook(req.user.email, req.query.book, key).then(() => {
       res.redirect("/home");
     });
