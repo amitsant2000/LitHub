@@ -9,11 +9,16 @@
     <strong>Uploaded Books</strong>
     <br>
     <br>
-    <div>Book 1</div>
-    <p>Book 2</p>
+    {{#each books}}
+    {{#if this.ownerEmail}}
+    <li>{{this.title}} - Owner = {{this.ownerEmail}}</li>
+    {{else}}
+    <li>{{this.title}} - Unowned</li>
+    {{/if}}
+    {{/each}}
 
     <hr>
-    <a href="file:///Users/christopherpan/LitHub/html/upload.html">Upload Book</a>
+    <a href="/upload">Upload Book</a>
   </div>
 </body>
 

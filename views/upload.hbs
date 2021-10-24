@@ -7,22 +7,19 @@
 <h2>Upload</h2>
 <p>Click on the "Choose File" button to upload a file:</p>
 
-<form action="/action_page.php" method="post">
+<form  enctype="multipart/form-data" action="/upload-book" method="post">
     
   <label for="title"><b>Title</b></label>
   <input type="text" placeholder="Enter Title" name="title" id="title" required>
 
   <label for="price"><b>Price</b></label>
-  <input type="text" placeholder="Enter Price" name="price" id="price" required>
+  <input type="number" placeholder="Enter Price in ETH" name="price" id="price" step="any" required>
 
   <br>
   <br>
-
-  <label for="username"><b>Username</b></label>
-  <input type="username" placeholder="Enter eluv.io username" name="username" id="username" required>
 
   <label for="key"><b>Key</b></label>
-  <input type="key" placeholder="Enter eluv.io private key" name="key" id="key" required>
+  <input type="textarea" placeholder="Enter eluv.io private key" name="key" id="key" required>
 
   <br>
   <br>
@@ -64,3 +61,19 @@
   }
   
   </style>
+  <script>
+  var coll = document.getElementsByClassName("collapsible");
+  var i;
+
+  for (i = 0; i < coll.length; i++) {
+    coll[i].addEventListener("click", function() {
+      this.classList.toggle("active");
+      var content = this.nextElementSibling;
+      if (content.style.display === "block") {
+        content.style.display = "none";
+      } else {
+        content.style.display = "block";
+      }
+    });
+  } 
+</script>

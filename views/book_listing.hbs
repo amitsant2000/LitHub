@@ -3,11 +3,15 @@
   <div id="wrap">
     <h1>LitHub</h1>
     <h2>Book Listing</h2>
-    <p></p>
-    <div>Book 1</div>
-    <br>
-    <div>Book 2</div>
-    <p>Book 3</p>
+    {{#each books}}
+     <button type="button" class="collapsible">{{this.title}} - {{this.price}} ETH</button>
+      <div class="content">
+        <form action="/buy-book?book={{this.id}}" method="post">
+          <input type="textarea" placeholder="Enter eluv.io private key" name="key" id="key" required>
+          <button type="submit">Buy</button>
+        </form>
+      </div> 
+    {{/each}}
   </div>
 </body>
 
@@ -38,5 +42,47 @@ body
 {
     text-align: center; /* required by some browsers */
 }
+/* from w3 schools */
+ /* Style the button that is used to open and close the collapsible content */
+.collapsible {
+  background-color: #eee;
+  color: #444;
+  cursor: pointer;
+  padding: 18px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+}
+
+/* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+.active, .collapsible:hover {
+  background-color: #ccc;
+}
+
+/* Style the collapsible content. Note: hidden by default */
+.content {
+  padding: 0 18px;
+  display: none;
+  overflow: hidden;
+  background-color: #f1f1f1;
+} 
 
 </style>
+<script>
+  var coll = document.getElementsByClassName("collapsible");
+  var i;
+
+  for (i = 0; i < coll.length; i++) {
+    coll[i].addEventListener("click", function() {
+      this.classList.toggle("active");
+      var content = this.nextElementSibling;
+      if (content.style.display === "block") {
+        content.style.display = "none";
+      } else {
+        content.style.display = "block";
+      }
+    });
+  } 
+</script>

@@ -10,12 +10,108 @@ var app = express()
 var http = require('http');
 var cookieParser = require('cookie-parser');
 var crypto = require('crypto'); 
+const { ElvClient } = require("@eluvio/elv-client-js");
+const multer  = require('multer')
+const upload = multer({ dest: 'data/uploads/' })
+
+const libraryId = process.env.LIB_ID;
+async function uploadContent(LitType, LitPath, LitName, LitSize, Title, key, Price) {
+    const client = await ElvClient.FromConfigurationUrl({
+        configUrl: process.env.CONFIG_URL
+    });
+    const wallet = client.GenerateWallet();
+  const signer = wallet.AddAccount({
+    privateKey: key
+  });
+
+client.SetSigner({signer});
+    const createResponse = await client.CreateContentObject({libraryId});
+    const objectId = createResponse.id;
+    const writeToken = createResponse.write_token;
+
+    await client.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadata: {
+        public: {
+          name: Title,
+          description: Title
+        },
+        tags: [
+          LitType
+        ]
+      }
+    });
+
+    await client.UploadFiles({
+        libraryId,
+        objectId,
+        writeToken,
+        fileInfo: [
+          {
+              path: "book.txt",
+              type: "file",
+              mime_type: "text/plain",
+              size: LitSize,
+              data: fs.openSync(path.join(LitPath,LitName)  ,"r")
+          }
+        ]
+    });
+
+
+    const finalizeResponse = await client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken
+    });
+
+    await client.SetAccessCharge({
+      objectId: objectId, 
+      accessCharge: Price});
+
+    await client.SetPermission({objectId: objectId, permission: "viewable"});
+    //var newAccessgroup = client.CreateAccessGroup()
+
+    const versionHash = finalizeResponse.hash;
+    return objectId
+}
+async function accessBook(objectId, key) {
+  const client = await ElvClient.FromConfigurationUrl({
+    configUrl: process.env.CONFIG_URL
+  });
+  const wallet = client.GenerateWallet();
+  const signer = wallet.AddAccount({
+    privateKey: key
+  });
+  await client.SetSigner({signer});
+  const accessReq =await client.AccessRequest({
+    libraryId: process.env.LIB_ID,
+    objectId: objectId,
+  })
+  return "if you have time to clean, you are not reading enough"
+}
+async function downloadBook(key, objectId) {
+  const client = await ElvClient.FromConfigurationUrl({
+    configUrl: process.env.CONFIG_URL
+  });
+  const wallet = client.GenerateWallet();
+  const signer = wallet.AddAccount({
+    privateKey: key
+  });
+  client.SetSigner({signer});
+  return await client.DownloadFile({
+    libraryId: libraryId,
+    objectId: objectId,
+    filePath: "book.txt"
+  })
+}
 
 // Connect to CockroachDB through Sequelize.
 var sequelize = new Sequelize({
   dialect: "postgres",
   username: "amitsant2000",
-  password: "gdswBnFYXAeBT-IX",
+  password: process.env.COCKROACH_PASS,
   host: "free-tier.gcp-us-central1.cockroachlabs.cloud",
   port: 26257,
   database: "curly-mink-4332.users",
@@ -76,6 +172,9 @@ const Book = sequelize.define("books", {
   ownerEmail: {
     type: Sequelize.STRING,
   },
+  filePath: {
+    type: Sequelize.STRING,
+  },
 });
 
 Account.sync({
@@ -115,22 +214,42 @@ function createAcct(mail, password, firstName, lastName, isAuthor) {
   });;
 };
 
-function createBook(authorEmail, title, price, data) {
-  let s = crypto.randomBytes(16).toString('hex') //replace with NFT hash
-  return Book.create(
-    {
-      id: s,
-      title:title,
-      authorEmail: authorEmail,
-      price: price,
-      ownerEmail: "",
-    }
-  )
-  .catch(function (err) {
-    console.error("error: " + err.message);
-    process.exit(1);
-  });;
+function createBook(authorEmail, title, price, fileDir, fileName, fileSize, pkey) {
+  uploadContent("book", fileDir, fileName, fileSize + 1000, title, pkey, price).then((id) => {
+    return Book.create(
+      {
+        id: id,
+        title:title,
+        authorEmail: authorEmail,
+        price: price,
+        ownerEmail: "",
+        filePath: fileName
+      }
+    ).then(function () {
+      // Retrieve accounts.
+      return Book.findAll();
+    })
+    .then(function (books) {
+      // Print out the balances.
+      books.forEach(function (book) {
+        console.log(book.authorEmail + " " + book.id + " " + book.ownerEmail);
+      })
+    })
+    .catch(function (err) {
+      console.error("error: " + err.message);
+      process.exit(1);
+    });
+  })
+  
 };
+
+async function buyBook(userEmail, bookId, pkey){
+  await accessBook(bookId, pkey).then((na) => {
+    Book.findOne({id: bookId}).then((bk)=>{
+      bk.ownerEmail = userEmail;
+    });
+  })
+}
 
 const generateAuthToken = () => {
   return crypto.randomBytes(30).toString('hex');
@@ -238,30 +357,36 @@ app.post('/register', (req, res) => {
 
 app.get('/home', requireAuth, (req, res) => {
   if (req.user.author) {
-    let myBooks = Book.findAll({
+    Book.findAll({
       where: {
-        authorEmail: {
-          [Sequelize.Op.eq]: req.user.email
-        }
+        authorEmail: req.user.email
       }
-    })
-    res.render("author", {
-      "books": myBooks,
-      "user": req.user
+    }).then((myBooks) => {
+      res.render("author", {
+        "books": myBooks,
+        "user": req.user
+      })
     });
   } else {
-    let books = Book.findAll();
-    res.render("userHome", {
-      "books": books,
+    Book.findAll({
+      where: {
+        ownerEmail: req.user.email
+      }
+    }).then((books)=> {
+      res.render("user", {
+        "books": books,
+        "user": req.user
+      });
     });
   }
 });
 
 
-app.post('/upload-book', requireAuth, (req, res) => {
+app.post('/upload-book', upload.single('filename'), (req, res) => {
   if (req.user.author) {
-    const { title, price, data } = req.body;
-    createBook(req.user.email, title, price, data);
+    const { title, price, key } = req.body;
+    console.log(req.file)
+    createBook(req.user.email, title, price, req.file.destination, req.file.filename, req.file.size, key);
     res.redirect("/home");
   } else {
     res.redirect("/home");
@@ -270,10 +395,69 @@ app.post('/upload-book', requireAuth, (req, res) => {
 
 app.post('/buy-book', requireAuth, (req, res) => {
   if (!req.user.author) {
-    const { id } = req.body;
-    buyBook(req.user.email, id)
-    res.redirect("/home");
+    const { key } = req.body;
+    downloadBook(req.body.key, req.query.book).then((res)=> {
+      //brandonis
+      var dec = new TextDecoder('utf-8')
+      var content = dec.decode(res)
+      res.render("read", {
+        "content": content
+      });
+    })
+    return
+    buyBook(req.user.email, req.query.book, key).then(() => {
+      res.redirect("/home");
+    });
   } else {
     res.redirect("/home");
   }
 });
+
+app.get("/market", requireAuth, (req, res) => {
+  if (!req.user.author) {
+    Book.findAll({
+      where: {
+        ownerEmail: ""
+      }
+    }).then((books)=> {
+      res.render("book_listing", {
+        "books": books
+      });
+    })
+  } else {
+    res.redirect("/home");
+  }
+})
+
+app.get("/read", requireAuth, (req, res) => {
+  if (!req.user.author) {
+    let book = Book.findOne({
+      where: {
+        ownerEmail: req.user.email,
+        id: req.query["book"]
+      }
+    });
+    if (book) {
+      downloadBook(req.body.key, book.id).then((res)=> {
+        //brandonis
+        var dec = new TextDecoder('utf-8')
+        var content = dec.decode(res)
+        res.render("read", {
+          "content": content
+        });
+      })
+    } else {
+      res.redirect("/home")
+    }
+  } else {
+    res.redirect("/home");
+  }
+})
+
+app.get("/upload", requireAuth, (req, res) => {
+  if (req.user.author) {
+    res.render("upload")
+  } else {
+    res.redirect("/home");
+  }
+})
