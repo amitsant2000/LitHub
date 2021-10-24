@@ -101,7 +101,7 @@ async function downloadBook(key, objectId) {
   });
   client.SetSigner({signer});
   return await client.DownloadFile({
-    libraryId: libraryId,
+    libraryId: process.env.LIB_ID,
     objectId: objectId,
     filePath: "book.txt"
   })
