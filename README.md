@@ -1,5 +1,7 @@
 # LitHub
 
+## https://literaturehub.azurewebsites.net/
+
 ## Inspiration
 eluv.io is currently mainly a streaming and ticketing platform. As avid readers ourselves, we believe that literature has an immense amount of untapped potential within the NFT space, and eluv.io provides the perfect platform for us to securely share the joy of reading with people all around the world.
 ## What it does
@@ -14,5 +16,3 @@ We're proud of overcoming the many challenges we ran into along the way and comp
 We learned a myriad of things while working on this project. First and foremost, we learned a lot about blockchain, NFTs, and how to utilize these tools during development. In addition, we also learned how to use eluv.io's API, as well as the many features their platform provides.
 ## What's next for LitHub
 The main next step for LitHub would be to scale our application to handle a larger user base. From there we hope to share LitHub amongst authors and readers around the world so that they too can take partake in the universe of NFTs to safely share their passion.
-
-## Try it out here: https://literaturehub.azurewebsites.net/
