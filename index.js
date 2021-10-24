@@ -82,6 +82,10 @@ Account.sync({
   force: true,
 })
 
+Book.sync({
+  force: true,
+})
+
 function createAcct(mail, password, firstName, lastName, isAuthor) {
   let s = crypto.randomBytes(16).toString('hex')
   return Account.create(
@@ -92,7 +96,7 @@ function createAcct(mail, password, firstName, lastName, isAuthor) {
       hash: crypto.pbkdf2Sync(password, s,  
         1000, 64, `sha512`).toString(`hex`),
       salt: s,
-      author: isAuthor,
+      author: isAuthor == "isAuthor",
       balance: 0.0,
     }
   ).then(function () {
@@ -102,7 +106,7 @@ function createAcct(mail, password, firstName, lastName, isAuthor) {
   .then(function (accounts) {
     // Print out the balances.
     accounts.forEach(function (account) {
-      console.log(account.email + " " + account.hash);
+      console.log(account.email + " " + account.hash + " " + String(account.author));
     })
   })
   .catch(function (err) {
@@ -130,6 +134,16 @@ function createBook(authorEmail, title, price, data) {
 
 const generateAuthToken = () => {
   return crypto.randomBytes(30).toString('hex');
+}
+
+const verifyPass = (acct, password) => {
+  if (acct == null) {
+    return false
+  } else {
+    let hashedPassword = crypto.pbkdf2Sync(password, acct.salt,  
+      1000, 64, `sha512`).toString(`hex`)
+    return hashedPassword == acct.hash
+  }
 }
 
 
@@ -164,37 +178,32 @@ const requireAuth = (req, res, next) => {
   }
 };
 
+app.get("/", requireAuth, (req, res) => {
+  res.redirect("/home");
+});
+
 app.get("/login", (req, res) => {
   res.render("login");
 });
 
 app.post('/login', (req, res) => {
     const { email, password, isAuthor } = req.body;
-
-    const user = Account.findOne({ where: {email: email, author: isAuthor } }).then(acct => {
-      if (acct != null) {
-        return false
-      } else {
-        let hashedPassword = crypto.pbkdf2Sync(password, acct.salt,  
-          1000, 64, `sha512`).toString(`hex`)
-        return hashedPassword == acct.hash
-      }
-    })
-
-    if (user) {
+    Account.findOne({ where: {email: email, author: isAuthor == "isAuthor" } }).then(acct => {
+      if (verifyPass(acct, password)) {
         const authToken = generateAuthToken();
 
-        authTokens[authToken] = user;
+        authTokens[authToken] = acct;
 
         res.cookie('AuthToken', authToken);
 
         res.redirect('/home');
-    } else {
-        res.render('login', {
-            message: 'Invalid username or password',
-            messageClass: 'alert-danger'
-        });
-    }
+      } else {
+          res.render('login', {
+              message: 'Invalid username or password',
+              messageClass: 'alert-danger'
+          });
+      }
+    })
 });
 
 app.get("/register", (req, res) => {
@@ -228,7 +237,7 @@ app.post('/register', (req, res) => {
 });
 
 app.get('/home', requireAuth, (req, res) => {
-  if (req.user.isAuthor) {
+  if (req.user.author) {
     let myBooks = Book.findAll({
       where: {
         authorEmail: {
@@ -236,8 +245,9 @@ app.get('/home', requireAuth, (req, res) => {
         }
       }
     })
-    res.render("authorHome", {
+    res.render("author", {
       "books": myBooks,
+      "user": req.user
     });
   } else {
     let books = Book.findAll();
@@ -249,7 +259,7 @@ app.get('/home', requireAuth, (req, res) => {
 
 
 app.post('/upload-book', requireAuth, (req, res) => {
-  if (req.user.isAuthor) {
+  if (req.user.author) {
     const { title, price, data } = req.body;
     createBook(req.user.email, title, price, data);
     res.redirect("/home");
@@ -259,7 +269,7 @@ app.post('/upload-book', requireAuth, (req, res) => {
 });
 
 app.post('/buy-book', requireAuth, (req, res) => {
-  if (!req.user.isAuthor) {
+  if (!req.user.author) {
     const { id } = req.body;
     buyBook(req.user.email, id)
     res.redirect("/home");
