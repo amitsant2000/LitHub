@@ -1,9 +1,10 @@
 const { ElvClient } = require("@eluvio/elv-client-js");
 const fs = require("fs");
+var path = require('path');
 const myPrivateKey = "0x2d703a925bec7c9847424c2c9b266d0009cb7fb3c00296c9b405241ffeeec858";
 const secondKey = "0xf5ae0c573548597085ee417260510292fcbbcb302c33ee80eb7422902577f2ba";
 const libraryId = "ilib2gZw5kNLYSmmQ76NShfAoYv2Twne";
-async function uploadContent(LitType, LitPath, LitSize, Title, key, Price) {
+async function uploadContent(LitType, LitPath, LitName, LitSize, Title, key, Price) {
     const client = await ElvClient.FromConfigurationUrl({
         configUrl: "https://demov3.net955210.contentfabric.io/config"
     });
@@ -38,11 +39,11 @@ client.SetSigner({signer});
         writeToken,
         fileInfo: [
           {
-              path: LitPath,
+              path: "book.txt",
               type: "file",
               mime_type: "text/plain",
               size: LitSize,
-              data: fs.openSync(LitPath,"r")
+              data: fs.openSync(path.join(LitPath,LitName)  ,"r")
           }
         ]
     });
@@ -102,7 +103,8 @@ async function downloadBook(key, objectId, filePath) {
     filePath: filePath
   })
 }
-//uploadContent("Book", "test.txt", 10000, "Book2", myPrivateKey, 0.05)
+
+//uploadContent("Book", "testfolder", "test.txt", 10000, "Book3", myPrivateKey, 0.05)
 //accessBook("iq__c6TP7cVAqRKSKu4S6PGUqYN36JE", secondKey); 
 //setVisible("iq__c6TP7cVAqRKSKu4S6PGUqYN36JE", myPrivateKey);
 /*downloadBook(myPrivateKey,"iq__c6TP7cVAqRKSKu4S6PGUqYN36JE", "/test.txt").then(
