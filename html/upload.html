@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<div class="container">
+<h1>LitHub</h1>
+<h2>Upload</h2>
+<p>Click on the "Choose File" button to upload a file:</p>
+
+<form action="/action_page.php" method="post">
+    
+  <label for="title"><b>Title</b></label>
+  <input type="text" placeholder="Enter Title" name="title" id="title" required>
+
+  <label for="price"><b>Price</b></label>
+  <input type="text" placeholder="Enter Price" name="price" id="price" required>
+
+  <br>
+  <br>
+  <input type="file" id="myFile" name="filename">
+  <input type="submit">
+
+</form>
+</div>
+
+</body>
+</html>
+
+<style>
+  body {
+    background-color: dimgray;
+    color: white;
+  }
+  
+  #wrap {
+    width: 60%;
+    margin: auto;
+    background: dimgray;
+    overflow: hidden;
+    padding: 15px;
+    border: 0ch;
+    
+  }
+  .page_wrap
+  {
+      border: 1px solid black;
+      width: 250px;
+      height: 100px;
+      margin-left: auto;
+      margin-right: auto;
+  }
+  body
+  {
+      text-align: center; /* required by some browsers */
+  }
+  
+  </style>
