@@ -15,4 +15,4 @@ We learned a myriad of things while working on this project. First and foremost,
 ## What's next for LitHub
 The main next step for LitHub would be to scale our application to handle a larger user base. From there we hope to share LitHub amongst authors and readers around the world so that they too can take partake in the universe of NFTs to safely share their passion.
 
-# Try it out here: https://literaturehub.azurewebsites.net/
+## Try it out here: https://literaturehub.azurewebsites.net/
